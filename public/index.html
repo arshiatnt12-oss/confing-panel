@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت کاربران و کانفیگ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="brand center"><div class="dot"></div><span>پنل کانفیگ</span></div>
+    <div class="field"><label>نام کاربری</label><input id="login-username" autocomplete="username"></div>
+    <div class="field"><label>رمز عبور</label><input id="login-password" type="password" autocomplete="current-password"></div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn" id="loginBtn" style="width:100%;">ورود</button>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="shell" id="appShell" style="display:none;">
+  <div class="sidebar">
+    <div class="brand"><div class="dot"></div><span>پنل کانفیگ</span></div>
+    <div class="nav-item active" data-view="users"><span class="nav-icon">◧</span> کاربران</div>
+    <div class="nav-item" data-view="server"><span class="nav-icon">⚙</span> تنظیمات سرور</div>
+    <div class="nav-item" data-view="account"><span class="nav-icon">◈</span> حساب کاربری</div>
+    <div class="sidebar-foot">
+      <button class="btn secondary small" id="logoutBtn" style="width:100%;">خروج</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div id="view-users">
+      <div class="topbar">
+        <div><h1>مدیریت کاربران</h1><p>افزودن، ویرایش و تولید کانفیگ برای هر کاربر</p></div>
+        <button class="btn" id="addUserBtn">+ کاربر جدید</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="label">کل کاربران</div><div class="value" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="label">فعال</div><div class="value accent" id="statActive">0</div></div>
+        <div class="stat-card"><div class="label">نزدیک به انقضا (۳ روز)</div><div class="value warn" id="statSoon">0</div></div>
+        <div class="stat-card"><div class="label">منقضی / غیرفعال</div><div class="value danger" id="statExpired">0</div></div>
+      </div>
+      <div class="panel-box">
+        <div class="box-head"><h3>لیست کاربران</h3></div>
+        <div id="tableWrap"></div>
+      </div>
+    </div>
+
+    <div id="view-server" style="display:none;">
+      <div class="topbar"><div><h1>تنظیمات سرور</h1><p>این مقادیر برای ساخت کانفیگ‌های کاربران استفاده می‌شوند</p></div></div>
+      <div class="panel-box">
+        <div class="modal-body">
+          <div class="field-row">
+            <div class="field"><label>آدرس سرور (Address)</label><input id="srv-address" placeholder="example.com"></div>
+            <div class="field"><label>پورت</label><input id="srv-port" placeholder="443"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>پروتکل</label>
+              <select id="srv-protocol"><option value="vless">VLESS</option><option value="vmess">VMess</option></select>
+            </div>
+            <div class="field"><label>شبکه (Network)</label>
+              <select id="srv-network"><option value="ws">WebSocket</option><option value="tcp">TCP</option><option value="grpc">gRPC</option></select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>مسیر (Path)</label><input id="srv-path" placeholder="/ws"></div>
+            <div class="field"><label>SNI / هاست</label><input id="srv-sni" placeholder="example.com"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>امنیت (Security)</label>
+              <select id="srv-security"><option value="tls">TLS</option><option value="none">None</option></select>
+            </div>
+            <div class="field"><label>برچسب پیش‌فرض (Remark)</label><input id="srv-remark" placeholder="MyPanel"></div>
+          </div>
+          <div style="display:flex; justify-content:flex-end;"><button class="btn" id="saveServerBtn">ذخیره تنظیمات</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-account" style="display:none;">
+      <div class="topbar"><div><h1>حساب کاربری</h1><p>تغییر رمز عبور ادمین</p></div></div>
+      <div class="panel-box">
+        <div class="modal-body">
+          <div class="field"><label>رمز فعلی</label><input id="acc-current" type="password"></div>
+          <div class="field"><label>رمز جدید</label><input id="acc-new" type="password"></div>
+          <div style="display:flex; justify-content:flex-end;"><button class="btn" id="changePassBtn">تغییر رمز</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
