@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db');
+const xrayManager = require('../lib/xrayManager');
 
 const router = express.Router();
 
@@ -7,12 +8,11 @@ function rowToSettings(row) {
   return {
     address: row.address,
     port: row.port,
-    protocol: row.protocol,
     network: row.network,
     path: row.path,
-    sni: row.sni,
     security: row.security,
-    remark: row.remark
+    remark: row.remark,
+    cleanIps: row.clean_ips || ''
   };
 }
 
@@ -27,10 +27,11 @@ router.put('/', (req, res) => {
 
   db.prepare(`
     UPDATE server_settings
-    SET address=?, port=?, protocol=?, network=?, path=?, sni=?, security=?, remark=?
+    SET address=?, port=?, network=?, path=?, security=?, remark=?, clean_ips=?
     WHERE id=1
-  `).run(next.address, next.port, next.protocol, next.network, next.path, next.sni, next.security, next.remark);
+  `).run(next.address, next.port, next.network, next.path, next.security, next.remark, next.cleanIps);
 
+  xrayManager.scheduleRestart();
   res.json(next);
 });
 

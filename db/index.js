@@ -2,7 +2,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, '..', 'data.sqlite');
+const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'data.sqlite');
 const db = new DatabaseSync(dbPath);
 
 db.exec('PRAGMA journal_mode = WAL;');
@@ -19,18 +19,21 @@ CREATE TABLE IF NOT EXISTS server_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   address TEXT DEFAULT '',
   port TEXT DEFAULT '443',
-  protocol TEXT DEFAULT 'vless',
   network TEXT DEFAULT 'ws',
   path TEXT DEFAULT '/ws',
-  sni TEXT DEFAULT '',
   security TEXT DEFAULT 'tls',
-  remark TEXT DEFAULT 'MyPanel'
+  remark TEXT DEFAULT 'Warbius',
+  clean_ips TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   uuid TEXT UNIQUE NOT NULL,
+  protocol TEXT DEFAULT 'vless',
+  port TEXT DEFAULT '',
+  sni TEXT DEFAULT '',
+  ss_method TEXT DEFAULT 'aes-256-gcm',
   expiry TEXT,
   traffic_limit_gb REAL DEFAULT 0,
   traffic_used_gb REAL DEFAULT 0,
@@ -39,21 +42,48 @@ CREATE TABLE IF NOT EXISTS users (
 );
 `);
 
+// Add columns that may be missing if upgrading from an older schema
+function ensureColumn(table, column, definition) {
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  } catch (e) {
+    // Column already exists - ignore
+  }
+}
+ensureColumn('users', 'protocol', "TEXT DEFAULT 'vless'");
+ensureColumn('users', 'port', "TEXT DEFAULT ''");
+ensureColumn('users', 'sni', "TEXT DEFAULT ''");
+ensureColumn('users', 'ss_method', "TEXT DEFAULT 'aes-256-gcm'");
+ensureColumn('users', 'network', "TEXT DEFAULT ''");
+ensureColumn('users', 'device_limit', "INTEGER DEFAULT 1");
+ensureColumn('users', 'fingerprint', "TEXT DEFAULT 'chrome'");
+ensureColumn('server_settings', 'clean_ips', "TEXT DEFAULT ''");
+ensureColumn('server_settings', 'remark', "TEXT DEFAULT 'Warbius'");
+
+// Seed default server settings row if missing
 const settingsRow = db.prepare('SELECT id FROM server_settings WHERE id = 1').get();
 if (!settingsRow) {
   db.prepare(`INSERT INTO server_settings (id) VALUES (1)`).run();
 }
 
-const adminCount = db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
-if (adminCount === 0) {
-  const username = process.env.ADMIN_USERNAME || 'admin';
-  const password = process.env.ADMIN_PASSWORD || 'admin123';
-  const hash = bcrypt.hashSync(password, 10);
-  db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run(username, hash);
-  console.log(`[setup] Created initial admin account -> username: "${username}"`);
-  if (!process.env.ADMIN_PASSWORD) {
-    console.log('[setup] WARNING: using default password "admin123". Set ADMIN_PASSWORD in .env and restart, then change it.');
-  }
+// Always sync the admin account to match the current environment variables.
+// This means changing ADMIN_USERNAME / ADMIN_PASSWORD in Railway and redeploying
+// will reliably update the login credentials, instead of only working the very
+// first time the database is created.
+const envUsername = process.env.ADMIN_USERNAME || 'admin';
+const envPassword = process.env.ADMIN_PASSWORD || 'admin123';
+const hash = bcrypt.hashSync(envPassword, 10);
+
+const existingAdmin = db.prepare('SELECT * FROM admins LIMIT 1').get();
+if (!existingAdmin) {
+  db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run(envUsername, hash);
+  console.log(`[setup] Created admin account -> username: "${envUsername}"`);
+} else {
+  db.prepare('UPDATE admins SET username = ?, password_hash = ? WHERE id = ?').run(envUsername, hash, existingAdmin.id);
+  console.log(`[setup] Synced admin account with environment variables -> username: "${envUsername}"`);
+}
+if (!process.env.ADMIN_PASSWORD) {
+  console.log('[setup] WARNING: ADMIN_PASSWORD not set, using default "admin123". Set it in Railway Variables.');
 }
 
 module.exports = db;
