@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../db');
-const { buildConfig } = require('../lib/configBuilder');
+const { buildConfig, buildRealityConfig } = require('../lib/configBuilder');
 const xrayManager = require('../lib/xrayManager');
 
 const router = express.Router();
@@ -172,6 +172,29 @@ router.get('/:id/config', (req, res) => {
 
   const config = buildConfig(rowToUser(user), settings, port);
   res.json({ config, protocol: user.protocol || 'vless', port });
+});
+
+// GET /api/users/:id/config-reality -> VLESS+Reality+TCP connection string
+// (faster / much harder to filter, but requires Reality to be set up in
+// Settings first: keys generated + TCP Proxy host/port filled in).
+router.get('/:id/config-reality', (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'کاربر یافت نشد' });
+  const settings = db.prepare('SELECT * FROM server_settings WHERE id = 1').get();
+
+  if (!settings.reality_enabled) {
+    return res.status(400).json({ error: 'Reality در تنظیمات سرور فعال نیست' });
+  }
+  if (user.protocol !== 'vless') {
+    return res.status(400).json({ error: 'Reality فقط برای کاربران VLESS در دسترس است' });
+  }
+
+  try {
+    const config = buildRealityConfig(rowToUser(user), settings);
+    res.json({ config, protocol: 'vless-reality' });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 module.exports = router;

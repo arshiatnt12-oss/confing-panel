@@ -2,7 +2,7 @@ const I18N = {
   fa: {
     telegramText: 'کانال تلگرام',
     navHome: 'خانه', navUsers: 'کاربر جدید', navCleanip: 'Clean IP',
-    navServer: 'تنظیمات سرور', navAccount: 'حساب کاربری', logout: 'خروج',
+    navServer: 'تنظیمات سرور', navReality: 'Reality', navAccount: 'حساب کاربری', logout: 'خروج',
     loginTitle: 'ورود به پنل', username: 'نام کاربری', password: 'رمز عبور', loginBtn: 'ورود',
     homeSubtitle: 'نمای کلی مصرف و وضعیت کاربران',
     statTotalUsers: 'کل کاربران', statActive: 'فعال', statTraffic: 'مجموع ترافیک (GB)', statExpiring: 'نزدیک به انقضا',
@@ -39,12 +39,17 @@ const I18N = {
     confirmDelete: 'این کاربر حذف بشه؟', passwordChanged: 'رمز عبور تغییر کرد',
     editUserTitle: 'ویرایش کاربر', cancel: 'انصراف', save: 'ذخیره', close: 'بستن',
     defaultUsernameLabel: 'نام کاربری:', defaultPasswordLabel: 'رمز عبور:',
-    remarkLockedHint: 'این مقدار ثابته و قابل تغییر نیست.'
+    remarkLockedHint: 'این مقدار ثابته و قابل تغییر نیست.',
+    realityTitle: 'Reality (سرعت بالا / ضدفیلتر)', realitySubtitle: 'اتصال مستقیم بدون عبور از edge ریلوی - نیازمند یک TCP Proxy جدا',
+    realityHint: '۱) توی تنظیمات Railway، بخش Networking، یک «TCP Proxy» جدید بساز که به پورت 48281 (یا هرچی این‌جا ست کردی) اشاره کنه. ۲) هاست و پورتی که Railway بهت داد رو پایین وارد کن. ۳) دکمه‌ی «ساخت کلید» رو بزن. ۴) فعالش کن و ذخیره کن.',
+    realityEnabledLabel: 'فعال‌سازی Reality', off: 'غیرفعال', on: 'فعال',
+    realityDestLabel: 'دامنه‌ی استتار (Dest)', realityProxyHostLabel: 'هاست TCP Proxy', realityProxyPortLabel: 'پورت TCP Proxy',
+    realityPublicKeyLabel: 'کلید عمومی (Public Key)', realityShortIdLabel: 'Short ID', generateKeys: 'ساخت کلید'
   },
   en: {
     telegramText: 'Telegram Channel',
     navHome: 'Home', navUsers: 'New User', navCleanip: 'Clean IP',
-    navServer: 'Server Settings', navAccount: 'Account', logout: 'Log out',
+    navServer: 'Server Settings', navReality: 'Reality', navAccount: 'Account', logout: 'Log out',
     loginTitle: 'Sign in', username: 'Username', password: 'Password', loginBtn: 'Sign in',
     homeSubtitle: 'Overview of usage and user status',
     statTotalUsers: 'Total Users', statActive: 'Active', statTraffic: 'Total Traffic (GB)', statExpiring: 'Expiring Soon',
@@ -81,7 +86,12 @@ const I18N = {
     confirmDelete: 'Delete this user?', passwordChanged: 'Password changed',
     editUserTitle: 'Edit User', cancel: 'Cancel', save: 'Save', close: 'Close',
     defaultUsernameLabel: 'Username:', defaultPasswordLabel: 'Password:',
-    remarkLockedHint: 'This value is fixed and cannot be changed.'
+    remarkLockedHint: 'This value is fixed and cannot be changed.',
+    realityTitle: 'Reality (High speed / Anti-censorship)', realitySubtitle: 'Direct connection bypassing Railway\'s edge - requires a separate TCP Proxy',
+    realityHint: '1) In Railway settings, under Networking, create a new "TCP Proxy" pointing at port 48281 (or whatever you set here). 2) Enter the host/port Railway gave you below. 3) Click "Generate Keys". 4) Enable and save.',
+    realityEnabledLabel: 'Enable Reality', off: 'Disabled', on: 'Enabled',
+    realityDestLabel: 'Camouflage domain (Dest)', realityProxyHostLabel: 'TCP Proxy host', realityProxyPortLabel: 'TCP Proxy port',
+    realityPublicKeyLabel: 'Public Key', realityShortIdLabel: 'Short ID', generateKeys: 'Generate Keys'
   }
 };
 

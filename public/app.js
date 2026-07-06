@@ -70,7 +70,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     el.classList.add('active');
     const v = el.dataset.view;
-    ['home','users','cleanip','server','account'].forEach(name=>{
+    ['home','users','cleanip','server','reality','account'].forEach(name=>{
       document.getElementById(`view-${name}`).style.display = (name===v) ? '' : 'none';
     });
   };
@@ -81,7 +81,7 @@ async function loadAll(){
   try {
     const [users, settings] = await Promise.all([api('/users'), api('/settings')]);
     st.users = users; st.settings = settings;
-    hydrateServerForm(); hydrateCleanIpForm();
+    hydrateServerForm(); hydrateCleanIpForm(); hydrateRealityForm();
     renderHome(); renderUsersList();
   } catch (e) { toast(e.message, true); }
 }
@@ -96,6 +96,14 @@ function hydrateServerForm(){
 }
 function hydrateCleanIpForm(){
   document.getElementById('cip-list').value = (st.settings.cleanIps || '').split('\n').filter(Boolean).join('\n');
+}
+function hydrateRealityForm(){
+  document.getElementById('rl-enabled').value = st.settings.realityEnabled ? '1' : '0';
+  document.getElementById('rl-dest').value = st.settings.realityDest || 'www.microsoft.com:443';
+  document.getElementById('rl-proxy-host').value = st.settings.realityProxyHost || '';
+  document.getElementById('rl-proxy-port').value = st.settings.realityProxyPort || '';
+  document.getElementById('rl-pubkey').value = st.settings.realityPublicKey || '';
+  document.getElementById('rl-shortid').value = st.settings.realityShortId || '';
 }
 
 document.getElementById('saveServerBtn').onclick = async () => {
@@ -115,6 +123,27 @@ document.getElementById('applyCleanIpBtn').onclick = async () => {
   const cleanIps = document.getElementById('cip-list').value.split('\n').map(s=>s.trim()).filter(Boolean).join('\n');
   try { st.settings = await api('/settings', { method:'PUT', body: JSON.stringify({ cleanIps }) }); toast(t('applied')); st.configs = {}; renderUsersList(); }
   catch (e) { toast(e.message, true); }
+};
+
+document.getElementById('saveRealityBtn').onclick = async () => {
+  const payload = {
+    realityEnabled: document.getElementById('rl-enabled').value === '1',
+    realityDest: document.getElementById('rl-dest').value.trim() || 'www.microsoft.com:443',
+    realityProxyHost: document.getElementById('rl-proxy-host').value.trim(),
+    realityProxyPort: document.getElementById('rl-proxy-port').value.trim()
+  };
+  try { st.settings = await api('/settings', { method:'PUT', body: JSON.stringify(payload) }); hydrateRealityForm(); toast(t('applied')); st.configs = {}; renderUsersList(); }
+  catch (e) { toast(e.message, true); }
+};
+
+document.getElementById('genRealityKeysBtn').onclick = async () => {
+  try {
+    const res = await api('/settings/reality/generate-keys', { method:'POST' });
+    st.settings.realityPublicKey = res.publicKey;
+    st.settings.realityShortId = res.shortId;
+    hydrateRealityForm();
+    toast(t('applied'));
+  } catch (e) { toast(e.message, true); }
 };
 
 // ---- Status helpers ----
@@ -223,6 +252,7 @@ function userCardSkeleton(u){
         <button class="pill-btn reset" onclick="resetUser(${u.id})">↻ ${t('resetBtn')}</button>
         <button class="pill-btn sub" onclick="copySub('${u.uuid}')">🔗 ${t('subBtn')}</button>
         <button class="pill-btn link" onclick="copyConfig(${u.id})">📋 ${t('linkBtn')}</button>
+        ${(st.settings.realityEnabled && u.protocol === 'vless') ? `<button class="pill-btn reality" onclick="copyReality(${u.id})">⚡ Reality</button>` : ''}
       </span>
     </div>
     <div class="traffic-bar green"><div class="fill" style="width:${pct}%"></div></div>
@@ -240,6 +270,13 @@ async function copyConfig(id){
 function copySub(uuid){
   const subUrl = `${location.origin}/sub/${uuid}`;
   navigator.clipboard.writeText(subUrl).then(()=>toast(t('subCopied'))).catch(()=>{});
+}
+
+async function copyReality(id){
+  try {
+    const data = await api(`/users/${id}/config-reality`);
+    navigator.clipboard.writeText(data.config).then(()=>toast(t('linkCopied'))).catch(()=>{});
+  } catch (e) { toast(e.message, true); }
 }
 
 async function resetUser(id){

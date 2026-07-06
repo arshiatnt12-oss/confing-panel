@@ -46,6 +46,7 @@
     <div class="nav-item" data-view="users"><span class="nav-icon">＋</span><span data-i18n="navUsers">کاربر جدید</span></div>
     <div class="nav-item" data-view="cleanip"><span class="nav-icon">◔</span><span data-i18n="navCleanip">Clean IP</span></div>
     <div class="nav-item" data-view="server"><span class="nav-icon">⚙</span><span data-i18n="navServer">تنظیمات سرور</span></div>
+    <div class="nav-item" data-view="reality"><span class="nav-icon">⚡</span><span data-i18n="navReality">Reality</span></div>
     <div class="nav-item" data-view="account"><span class="nav-icon">◈</span><span data-i18n="navAccount">حساب کاربری</span></div>
     <div class="sidebar-foot">
       <button class="btn secondary small" id="logoutBtn" style="width:100%;" data-i18n="logout">خروج</button>
@@ -183,6 +184,37 @@
           </div>
           <div style="display:flex; justify-content:flex-end;">
             <button class="btn" id="saveServerBtn" data-i18n="apply">اعمال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REALITY SETTINGS -->
+    <div id="view-reality" style="display:none;">
+      <div class="topbar"><div><h1 data-i18n="realityTitle">Reality (سرعت بالا / ضدفیلتر)</h1><p data-i18n="realitySubtitle">اتصال مستقیم بدون عبور از edge ریلوی - نیازمند یک TCP Proxy جدا</p></div></div>
+      <div class="panel-box">
+        <div class="modal-body">
+          <div class="hint" style="margin-bottom:10px;" data-i18n="realityHint">
+            ۱) توی تنظیمات Railway، بخش Networking، یک «TCP Proxy» جدید بساز که به پورت 48281 (یا هرچی این‌جا ست کردی) اشاره کنه. ۲) هاست و پورتی که Railway بهت داد (چیزی مثل xxxx.proxy.rlwy.net:12345) رو پایین وارد کن. ۳) دکمه‌ی «ساخت کلید» رو بزن. ۴) فعالش کن و ذخیره کن.
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label data-i18n="realityEnabledLabel">فعال‌سازی Reality</label>
+              <select id="rl-enabled"><option value="0" data-i18n="off">غیرفعال</option><option value="1" data-i18n="on">فعال</option></select>
+            </div>
+            <div class="field"><label data-i18n="realityDestLabel">دامنه‌ی استتار (Dest)</label><input id="rl-dest" placeholder="www.microsoft.com:443"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label data-i18n="realityProxyHostLabel">هاست TCP Proxy</label><input id="rl-proxy-host" placeholder="xxxx.proxy.rlwy.net"></div>
+            <div class="field"><label data-i18n="realityProxyPortLabel">پورت TCP Proxy</label><input id="rl-proxy-port" placeholder="12345"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label data-i18n="realityPublicKeyLabel">کلید عمومی (Public Key)</label><input id="rl-pubkey" disabled placeholder="—"></div>
+            <div class="field"><label data-i18n="realityShortIdLabel">Short ID</label><input id="rl-shortid" disabled placeholder="—"></div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn secondary" id="genRealityKeysBtn" data-i18n="generateKeys">ساخت کلید</button>
+            <button class="btn" id="saveRealityBtn" data-i18n="apply">اعمال</button>
           </div>
         </div>
       </div>

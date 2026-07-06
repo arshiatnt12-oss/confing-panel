@@ -59,6 +59,13 @@ ensureColumn('users', 'device_limit', "INTEGER DEFAULT 1");
 ensureColumn('users', 'fingerprint', "TEXT DEFAULT 'chrome'");
 ensureColumn('server_settings', 'clean_ips', "TEXT DEFAULT ''");
 ensureColumn('server_settings', 'remark', "TEXT DEFAULT 'warbius'");
+ensureColumn('server_settings', 'reality_enabled', "INTEGER DEFAULT 0");
+ensureColumn('server_settings', 'reality_dest', "TEXT DEFAULT 'www.microsoft.com:443'");
+ensureColumn('server_settings', 'reality_private_key', "TEXT DEFAULT ''");
+ensureColumn('server_settings', 'reality_public_key', "TEXT DEFAULT ''");
+ensureColumn('server_settings', 'reality_short_id', "TEXT DEFAULT ''");
+ensureColumn('server_settings', 'reality_proxy_host', "TEXT DEFAULT ''");
+ensureColumn('server_settings', 'reality_proxy_port', "TEXT DEFAULT ''");
 
 // Seed default server settings row if missing
 const settingsRow = db.prepare('SELECT id FROM server_settings WHERE id = 1').get();
