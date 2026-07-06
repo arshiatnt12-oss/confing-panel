@@ -37,7 +37,9 @@ const I18N = {
     emptyUsers: 'هنوز کاربری ساخته نشده.',
     nameRequired: 'نام کاربر رو وارد کن', userCreated: 'کاربر ساخته شد', userUpdated: 'کاربر بروزرسانی شد',
     confirmDelete: 'این کاربر حذف بشه؟', passwordChanged: 'رمز عبور تغییر کرد',
-    editUserTitle: 'ویرایش کاربر', cancel: 'انصراف', save: 'ذخیره', close: 'بستن'
+    editUserTitle: 'ویرایش کاربر', cancel: 'انصراف', save: 'ذخیره', close: 'بستن',
+    defaultUsernameLabel: 'نام کاربری:', defaultPasswordLabel: 'رمز عبور:',
+    remarkLockedHint: 'این مقدار ثابته و قابل تغییر نیست.'
   },
   en: {
     telegramText: 'Telegram Channel',
@@ -77,7 +79,9 @@ const I18N = {
     emptyUsers: 'No users created yet.',
     nameRequired: 'Enter the user name', userCreated: 'User created', userUpdated: 'User updated',
     confirmDelete: 'Delete this user?', passwordChanged: 'Password changed',
-    editUserTitle: 'Edit User', cancel: 'Cancel', save: 'Save', close: 'Close'
+    editUserTitle: 'Edit User', cancel: 'Cancel', save: 'Save', close: 'Close',
+    defaultUsernameLabel: 'Username:', defaultPasswordLabel: 'Password:',
+    remarkLockedHint: 'This value is fixed and cannot be changed.'
   }
 };
 

@@ -25,6 +25,16 @@ router.put('/', (req, res) => {
   const existing = db.prepare('SELECT * FROM server_settings WHERE id = 1').get();
   const next = { ...rowToSettings(existing), ...req.body };
 
+  // Remark is fixed and can't be changed from the client.
+  next.remark = 'warbius';
+
+  // Never let a blank/missing address wipe out a previously saved domain -
+  // the address only changes when the admin explicitly types a new one and
+  // saves it.
+  if (!req.body.address || !req.body.address.trim()) {
+    next.address = existing.address;
+  }
+
   db.prepare(`
     UPDATE server_settings
     SET address=?, port=?, network=?, path=?, security=?, remark=?, clean_ips=?

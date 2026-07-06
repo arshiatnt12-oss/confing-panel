@@ -13,12 +13,17 @@
 <!-- Login screen -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
+    <img class="login-logo" src="/logo-icon.png" alt="Warbius">
     <a class="login-telegram" href="https://t.me/WARBIUSvpn" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 3.5 2.6 11c-.9.35-.9 1.65.02 1.98l4.6 1.6 1.8 5.6c.24.75 1.2.9 1.68.28l2.4-3.1 4.9 3.6c.7.5 1.7.13 1.9-.72l3.3-14.6c.2-1-.8-1.8-1.7-1.15Z"/></svg>
       <span>WARBIUS VPN</span>
     </a>
     <p class="login-title" data-i18n="loginTitle">ورود به پنل</p>
     <div class="field"><label data-i18n="username">نام کاربری</label><input id="login-username" autocomplete="username"></div>
+    <div class="login-hint-box">
+      <div><span data-i18n="defaultUsernameLabel">نام کاربری:</span> <b>admin</b></div>
+      <div><span data-i18n="defaultPasswordLabel">رمز عبور:</span> <b>admin</b></div>
+    </div>
     <div class="field"><label data-i18n="password">رمز عبور</label><input id="login-password" type="password" autocomplete="current-password"></div>
     <div class="login-error" id="loginError"></div>
     <button class="btn" id="loginBtn" style="width:100%;" data-i18n="loginBtn">ورود</button>
@@ -28,6 +33,7 @@
 <!-- Main app -->
 <div class="shell" id="appShell" style="display:none;">
   <div class="sidebar">
+    <div class="sidebar-logo"><img src="/logo-icon.png" alt="Warbius"></div>
     <a class="sidebar-telegram" href="https://t.me/WARBIUSvpn" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 3.5 2.6 11c-.9.35-.9 1.65.02 1.98l4.6 1.6 1.8 5.6c.24.75 1.2.9 1.68.28l2.4-3.1 4.9 3.6c.7.5 1.7.13 1.9-.72l3.3-14.6c.2-1-.8-1.8-1.7-1.15Z"/></svg>
       <span data-i18n="telegramText">کانال تلگرام</span>
@@ -51,6 +57,7 @@
     <!-- HOME -->
     <div id="view-home">
       <div class="warbius-banner">
+        <img class="banner-logo" src="/logo-banner.jpg" alt="">
         <div class="word">WARBIUS</div>
         <div class="sub" data-i18n="homeSubtitle">نمای کلی مصرف و وضعیت کاربران</div>
       </div>
@@ -170,7 +177,9 @@
           </div>
           <div class="field-row">
             <div class="field"><label data-i18n="fieldPath">مسیر (Path)</label><input id="srv-path" placeholder="/ws"></div>
-            <div class="field"><label data-i18n="fieldRemark">برچسب (Remark)</label><input id="srv-remark" placeholder="Warbius"></div>
+            <div class="field"><label data-i18n="fieldRemark">برچسب (Remark)</label><input id="srv-remark" value="warbius" disabled>
+              <div class="hint" data-i18n="remarkLockedHint">این مقدار ثابته و قابل تغییر نیست.</div>
+            </div>
           </div>
           <div style="display:flex; justify-content:flex-end;">
             <button class="btn" id="saveServerBtn" data-i18n="apply">اعمال</button>

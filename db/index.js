@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS server_settings (
   network TEXT DEFAULT 'ws',
   path TEXT DEFAULT '/ws',
   security TEXT DEFAULT 'tls',
-  remark TEXT DEFAULT 'Warbius',
+  remark TEXT DEFAULT 'warbius',
   clean_ips TEXT DEFAULT ''
 );
 
@@ -58,7 +58,7 @@ ensureColumn('users', 'network', "TEXT DEFAULT ''");
 ensureColumn('users', 'device_limit', "INTEGER DEFAULT 1");
 ensureColumn('users', 'fingerprint', "TEXT DEFAULT 'chrome'");
 ensureColumn('server_settings', 'clean_ips', "TEXT DEFAULT ''");
-ensureColumn('server_settings', 'remark', "TEXT DEFAULT 'Warbius'");
+ensureColumn('server_settings', 'remark', "TEXT DEFAULT 'warbius'");
 
 // Seed default server settings row if missing
 const settingsRow = db.prepare('SELECT id FROM server_settings WHERE id = 1').get();

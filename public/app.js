@@ -1,8 +1,10 @@
 const st = { token: localStorage.getItem('panel_token') || null, users: [], settings: null, configs: {} };
 
-function toast(msg){
+function toast(msg, isError){
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 1800);
 }
 function escapeHtml(s){
@@ -54,7 +56,7 @@ document.getElementById('changePassBtn').onclick = async () => {
     toast(t('passwordChanged'));
     document.getElementById('acc-current').value = '';
     document.getElementById('acc-new').value = '';
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message, true); }
 };
 
 // ---- Language ----
@@ -81,7 +83,7 @@ async function loadAll(){
     st.users = users; st.settings = settings;
     hydrateServerForm(); hydrateCleanIpForm();
     renderHome(); renderUsersList();
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message, true); }
 }
 
 function hydrateServerForm(){
@@ -90,7 +92,7 @@ function hydrateServerForm(){
   document.getElementById('srv-network').value = st.settings.network || 'ws';
   document.getElementById('srv-security').value = st.settings.security || 'tls';
   document.getElementById('srv-path').value = st.settings.path || '/ws';
-  document.getElementById('srv-remark').value = st.settings.remark || 'Warbius';
+  document.getElementById('srv-remark').value = 'warbius';
 }
 function hydrateCleanIpForm(){
   document.getElementById('cip-list').value = (st.settings.cleanIps || '').split('\n').filter(Boolean).join('\n');
@@ -103,16 +105,16 @@ document.getElementById('saveServerBtn').onclick = async () => {
     network: document.getElementById('srv-network').value,
     security: document.getElementById('srv-security').value,
     path: document.getElementById('srv-path').value.trim() || '/',
-    remark: document.getElementById('srv-remark').value.trim() || 'Warbius'
+    remark: 'warbius'
   };
   try { st.settings = await api('/settings', { method:'PUT', body: JSON.stringify(payload) }); toast(t('applied')); st.configs = {}; renderUsersList(); }
-  catch (e) { toast(e.message); }
+  catch (e) { toast(e.message, true); }
 };
 
 document.getElementById('applyCleanIpBtn').onclick = async () => {
   const cleanIps = document.getElementById('cip-list').value.split('\n').map(s=>s.trim()).filter(Boolean).join('\n');
   try { st.settings = await api('/settings', { method:'PUT', body: JSON.stringify({ cleanIps }) }); toast(t('applied')); st.configs = {}; renderUsersList(); }
-  catch (e) { toast(e.message); }
+  catch (e) { toast(e.message, true); }
 };
 
 // ---- Status helpers ----
@@ -149,9 +151,13 @@ function renderHome(){
   }
   wrap.innerHTML = st.users.map(u=>{
     const status = getStatus(u);
-    return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-      <div style="font-weight:600; font-size:13px;">${escapeHtml(u.name)}</div>
-      <span class="badge ${status}">${statusLabel(status)}</span>
+    const pct = u.trafficLimit>0 ? Math.min(100, Math.round((u.trafficUsed/u.trafficLimit)*100)) : 0;
+    return `<div class="home-user-row">
+      <div class="home-user-row-top">
+        <div style="font-weight:600; font-size:13px;">${escapeHtml(u.name)}</div>
+        <span class="badge ${status}">${statusLabel(status)}</span>
+      </div>
+      <div class="home-traffic-bar"><div class="fill" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
 }
@@ -193,54 +199,41 @@ function userCardSkeleton(u){
   const status = getStatus(u);
   const dl = daysLeft(u.expiry);
   const pct = u.trafficLimit>0 ? Math.min(100, Math.round((u.trafficUsed/u.trafficLimit)*100)) : 0;
-  const fillClass = pct>=100 ? 'full' : (pct>=80 ? 'high' : '');
   const timeText = u.expiry ? escapeHtml(u.expiry) + (dl!==null?` (${dl>=0?dl+' '+t('days'):t('passed')})`:'') : t('unlimited');
   const deviceText = (u.deviceLimit===0 || u.deviceLimit===undefined || u.deviceLimit===null) ? '∞' : u.deviceLimit;
   const totalText = u.trafficLimit>0 ? u.trafficLimit.toFixed(2)+' GB' : t('unlimited');
   const usedText = (Number(u.trafficUsed)||0).toFixed(3)+' GB';
   const isOnline = status === 'active';
   return `
-  <div class="user-card">
-    <div class="user-card-head">
+  <div class="user-row">
+    <div class="user-row-main">
       <span class="badge-dot ${isOnline?'online':'offline'}">${isOnline?t('onlineLabel'):statusLabel(status)}</span>
-      <div class="head-right">
+      <span class="name">${escapeHtml(u.name)}</span>
+      <span class="proto-badge">🦅</span>
+      <span class="uuid-row mono">${escapeHtml(u.uuid)} 🔑</span>
+      <span class="user-row-stat"><span class="v">${escapeHtml(u.fingerprint||'chrome')}</span><span class="ic">🔑</span></span>
+      <span class="user-row-stat"><span class="v">${timeText}</span><span class="ic">📅</span></span>
+      <span class="user-row-stat"><span class="v">${usedText} :${t('usedLabel')}</span><span class="ic">📊</span></span>
+      <span class="user-row-stat"><span class="v">${t('totalLabel')}: ${totalText}</span><span class="ic">📦</span></span>
+      <span class="user-row-stat"><span class="v">${deviceText} ${t('deviceLabel')}</span><span class="ic">📱</span></span>
+      <span class="user-row-actions">
         <button class="icon-btn" onclick="toggleStatus(${u.id})" title="${t('edit')}">${u.status==='disabled'?'▶':'⏸'}</button>
         <button class="icon-btn" onclick="openEditUserModal(${u.id})" title="${t('edit')}">✎</button>
-        <span class="name">${escapeHtml(u.name)}</span>
-        <span class="proto-badge">🦅</span>
-      </div>
+        <button class="pill-btn danger" onclick="deleteUser(${u.id})">🗑️ ${t('delete')}</button>
+        <button class="pill-btn reset" onclick="resetUser(${u.id})">↻ ${t('resetBtn')}</button>
+        <button class="pill-btn sub" onclick="copySub('${u.uuid}')">🔗 ${t('subBtn')}</button>
+        <button class="pill-btn link" onclick="copyConfig(${u.id})">📋 ${t('linkBtn')}</button>
+      </span>
     </div>
-    <div class="uuid-row mono">${escapeHtml(u.uuid)} 🔑</div>
-    <div class="stat-row">
-      <div class="stat-item"><span class="v">${escapeHtml(u.fingerprint||'chrome')}</span><span class="ic">🔑</span></div>
-      <div class="stat-item">
-        <span class="v">${timeText}</span>
-        <span class="ic">📅</span>
-      </div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-item"><span class="v">${usedText} :${t('usedLabel')}</span><span class="ic">📊</span></div>
-      <div class="stat-item"><span class="v">${t('totalLabel')}: ${totalText}</span><span class="ic">📦</span></div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-item"><span class="v">${deviceText} ${t('deviceLabel')}</span><span class="ic">📱</span></div>
-      <div class="stat-item"></div>
-    </div>
-    <div class="traffic-bar"><div class="fill ${fillClass}" style="width:${pct}%"></div></div>
+    <div class="traffic-bar green"><div class="fill" style="width:${pct}%"></div></div>
     <div id="cfg-${u.id}" style="display:none;"></div>
-    <div class="user-card-actions">
-      <button class="pill-btn danger" onclick="deleteUser(${u.id})">🗑️ ${t('delete')}</button>
-      <button class="pill-btn reset" onclick="resetUser(${u.id})">↻ ${t('resetBtn')}</button>
-      <button class="pill-btn sub" onclick="copySub('${u.uuid}')">🔗 ${t('subBtn')}</button>
-      <button class="pill-btn link" onclick="copyConfig(${u.id})">📋 ${t('linkBtn')}</button>
-    </div>
   </div>`;
 }
 
 async function copyConfig(id){
   let cfg = st.configs[id];
   if (cfg === undefined) cfg = await getConfigFor(id);
-  if (!cfg || cfg.error) { toast((cfg && cfg.error) || t('copied')); return; }
+  if (!cfg || cfg.error) { toast((cfg && cfg.error) || t('copied'), true); return; }
   navigator.clipboard.writeText(cfg.config).then(()=>toast(t('linkCopied'))).catch(()=>{});
 }
 
@@ -252,7 +245,7 @@ function copySub(uuid){
 async function resetUser(id){
   if(!confirm(t('resetConfirm'))) return;
   try { await api(`/users/${id}/reset`, { method:'PATCH' }); await loadAll(); toast(t('resetDone')); }
-  catch(e){ toast(e.message); }
+  catch(e){ toast(e.message, true); }
 }
 
 // ---- Create user ----
@@ -280,7 +273,7 @@ document.getElementById('createUserBtn').onclick = async () => {
     st.configs = {};
     await loadAll();
     toast(t('userCreated'));
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message, true); }
 };
 
 function resetCreateForm(){
@@ -364,19 +357,19 @@ function openEditUserModal(id){
       await loadAll();
       closeModal();
       toast(t('userUpdated'));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, true); }
   };
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 
 async function toggleStatus(id){
   try { await api(`/users/${id}/toggle`, { method:'PATCH' }); await loadAll(); }
-  catch(e){ toast(e.message); }
+  catch(e){ toast(e.message, true); }
 }
 async function deleteUser(id){
   if(!confirm(t('confirmDelete'))) return;
   try { await api(`/users/${id}`, { method:'DELETE' }); delete st.configs[id]; await loadAll(); }
-  catch(e){ toast(e.message); }
+  catch(e){ toast(e.message, true); }
 }
 
 // ---- Init ----
