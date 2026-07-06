@@ -44,7 +44,23 @@ const I18N = {
     realityHint: '۱) توی تنظیمات Railway، بخش Networking، یک «TCP Proxy» جدید بساز که به پورت 48281 (یا هرچی این‌جا ست کردی) اشاره کنه. ۲) هاست و پورتی که Railway بهت داد رو پایین وارد کن. ۳) دکمه‌ی «ساخت کلید» رو بزن. ۴) فعالش کن و ذخیره کن.',
     realityEnabledLabel: 'فعال‌سازی Reality', off: 'غیرفعال', on: 'فعال',
     realityDestLabel: 'دامنه‌ی استتار (Dest)', realityProxyHostLabel: 'هاست TCP Proxy', realityProxyPortLabel: 'پورت TCP Proxy',
-    realityPublicKeyLabel: 'کلید عمومی (Public Key)', realityShortIdLabel: 'Short ID', generateKeys: 'ساخت کلید'
+    realityPublicKeyLabel: 'کلید عمومی (Public Key)', realityShortIdLabel: 'Short ID', generateKeys: 'ساخت کلید',
+
+    navSettings: 'تنظیمات پنل',
+    panelWelcome: 'خوش اومدی به Warbius Panel 👋',
+    displayModeLabel: 'حالت نمایش', lightMode: 'روشن', darkMode: 'تاریک',
+    bgOpacityLabel: 'شفافیت پس‌زمینه',
+    settingsTitle: 'تنظیمات پنل', settingsSubtitle: 'ظاهر، رمز عبور و اطلاعات پنل',
+    backgroundPathLabel: 'پس‌زمینه', versionLabel: 'نسخه', protocolsLabel: 'پروتکل‌ها',
+    tableName: 'نام', tableProtocol: 'پروتکل', tableUsage: 'مصرف', tableCredit: 'اعتبار',
+    tableStatus: 'وضعیت', tableSub: 'ساب', tableActions: 'عملیات',
+    recentUsersTitle: 'کاربران اخیر',
+    fieldConcurrent: 'اتصال هم‌زمان',
+    fieldTransport: 'نوع انتقال', fieldStatusSelect: 'وضعیت', resetUsageLabel: 'ریست مصرف',
+    ipScannerTitle: 'اسکنر آی‌پی', ipScannerHint: 'آی‌پی‌ها رو (هر خط یکی) وارد کن تا آی‌پی‌های تمیز پیدا بشن.',
+    ipScanPlaceholder: '1.1.1.1\n8.8.8.8', scanBtn: 'اسکن کن', scanning: 'در حال اسکن...',
+    copyAll: 'کپی همه', pingLabel: 'پینگ', addToListBtn: 'افزودن به لیست', deadIp: 'پاسخ نداد',
+    ipScanDone: 'اسکن تمام شد', ipsAdded: 'به لیست اضافه شد', noCleanIpsFound: 'هیچ آی‌پی تمیزی پیدا نشد'
   },
   en: {
     telegramText: 'Telegram Channel',
@@ -91,7 +107,23 @@ const I18N = {
     realityHint: '1) In Railway settings, under Networking, create a new "TCP Proxy" pointing at port 48281 (or whatever you set here). 2) Enter the host/port Railway gave you below. 3) Click "Generate Keys". 4) Enable and save.',
     realityEnabledLabel: 'Enable Reality', off: 'Disabled', on: 'Enabled',
     realityDestLabel: 'Camouflage domain (Dest)', realityProxyHostLabel: 'TCP Proxy host', realityProxyPortLabel: 'TCP Proxy port',
-    realityPublicKeyLabel: 'Public Key', realityShortIdLabel: 'Short ID', generateKeys: 'Generate Keys'
+    realityPublicKeyLabel: 'Public Key', realityShortIdLabel: 'Short ID', generateKeys: 'Generate Keys',
+
+    navSettings: 'Panel Settings',
+    panelWelcome: 'Welcome to Warbius Panel 👋',
+    displayModeLabel: 'Display Mode', lightMode: 'Light', darkMode: 'Dark',
+    bgOpacityLabel: 'Background Opacity',
+    settingsTitle: 'Panel Settings', settingsSubtitle: 'Appearance, password, and panel info',
+    backgroundPathLabel: 'Background', versionLabel: 'Version', protocolsLabel: 'Protocols',
+    tableName: 'Name', tableProtocol: 'Protocol', tableUsage: 'Usage', tableCredit: 'Validity',
+    tableStatus: 'Status', tableSub: 'Sub', tableActions: 'Actions',
+    recentUsersTitle: 'Recent Users',
+    fieldConcurrent: 'Concurrent Connections',
+    fieldTransport: 'Transport Type', fieldStatusSelect: 'Status', resetUsageLabel: 'Reset Usage',
+    ipScannerTitle: 'IP Scanner', ipScannerHint: 'Enter IPs (one per line) to find clean ones.',
+    ipScanPlaceholder: '1.1.1.1\n8.8.8.8', scanBtn: 'Scan', scanning: 'Scanning...',
+    copyAll: 'Copy All', pingLabel: 'Ping', addToListBtn: 'Add to List', deadIp: 'No response',
+    ipScanDone: 'Scan finished', ipsAdded: 'Added to list', noCleanIpsFound: 'No clean IPs found'
   }
 };
 

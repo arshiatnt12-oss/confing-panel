@@ -1,8 +1,49 @@
 const express = require('express');
+const net = require('net');
 const db = require('../db');
 const xrayManager = require('../lib/xrayManager');
 
 const router = express.Router();
+
+const IPV4_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+
+// Tests a single IP by opening a raw TCP connection to port 443 and timing
+// how long the handshake takes. This tells us whether the IP is reachable
+// ("clean") from this server and how fast it is, without needing any
+// external ping binaries (which aren't available in this environment).
+function testIp(ip, timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    if (!IPV4_RE.test(ip)) return resolve({ ip, clean: false });
+    const start = Date.now();
+    const socket = new net.Socket();
+    let done = false;
+    const finish = (clean) => {
+      if (done) return;
+      done = true;
+      socket.destroy();
+      resolve({ ip, clean, ping: clean ? Date.now() - start : null });
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+    socket.connect(443, ip);
+  });
+}
+
+// POST /api/settings/scan-ips -> { ips: ["1.1.1.1", ...] }
+// Returns each IP's reachability + latency, sorted fastest-first.
+router.post('/scan-ips', async (req, res) => {
+  const ips = Array.isArray(req.body.ips) ? req.body.ips : [];
+  const cleaned = [...new Set(ips.map(s => (s || '').toString().trim()).filter(Boolean))].slice(0, 60);
+  if (cleaned.length === 0) return res.json({ results: [] });
+  const results = await Promise.all(cleaned.map(ip => testIp(ip)));
+  results.sort((a, b) => {
+    if (a.clean !== b.clean) return a.clean ? -1 : 1;
+    return (a.ping || 0) - (b.ping || 0);
+  });
+  res.json({ results });
+});
 
 function rowToSettings(row) {
   return {

@@ -1,3 +1,4 @@
+const APP_VERSION = 'Warbius Panel v1.0';
 const st = { token: localStorage.getItem('panel_token') || null, users: [], settings: null, configs: {} };
 
 function toast(msg, isError){
@@ -59,6 +60,35 @@ document.getElementById('changePassBtn').onclick = async () => {
   } catch (e) { toast(e.message, true); }
 };
 
+// ---- Theme (light/dark) + background opacity ----
+function applyTheme(mode){
+  document.body.classList.toggle('theme-light', mode === 'light');
+  document.getElementById('themeLightBtn').classList.toggle('active', mode === 'light');
+  document.getElementById('themeDarkBtn').classList.toggle('active', mode !== 'light');
+  try { localStorage.setItem('panel_theme', mode); } catch(e){}
+}
+function applyBgOpacity(pct){
+  document.querySelectorAll('.warbius-banner .banner-logo').forEach(el=>{
+    el.style.opacity = (pct/100).toFixed(2);
+  });
+  document.getElementById('bgOpacityVal').textContent = pct + '%';
+  try { localStorage.setItem('panel_bg_opacity', pct); } catch(e){}
+}
+document.getElementById('themeLightBtn').onclick = () => applyTheme('light');
+document.getElementById('themeDarkBtn').onclick = () => applyTheme('dark');
+document.getElementById('bgOpacityRange').oninput = (e) => applyBgOpacity(e.target.value);
+
+document.getElementById('setChangePassBtn').onclick = async () => {
+  const currentPassword = document.getElementById('set-acc-current').value;
+  const newPassword = document.getElementById('set-acc-new').value;
+  try {
+    await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+    toast(t('passwordChanged'));
+    document.getElementById('set-acc-current').value = '';
+    document.getElementById('set-acc-new').value = '';
+  } catch (e) { toast(e.message, true); }
+};
+
 // ---- Language ----
 document.getElementById('langFa').onclick = () => applyLang('fa');
 document.getElementById('langEn').onclick = () => applyLang('en');
@@ -70,7 +100,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     el.classList.add('active');
     const v = el.dataset.view;
-    ['home','users','cleanip','server','reality','account'].forEach(name=>{
+    ['home','users','cleanip','server','reality','settings','account'].forEach(name=>{
       document.getElementById(`view-${name}`).style.display = (name===v) ? '' : 'none';
     });
   };
@@ -82,6 +112,7 @@ async function loadAll(){
     const [users, settings] = await Promise.all([api('/users'), api('/settings')]);
     st.users = users; st.settings = settings;
     hydrateServerForm(); hydrateCleanIpForm(); hydrateRealityForm();
+    document.getElementById('nu-path').value = st.settings.path || '/ws';
     renderHome(); renderUsersList();
   } catch (e) { toast(e.message, true); }
 }
@@ -117,6 +148,53 @@ document.getElementById('saveServerBtn').onclick = async () => {
   };
   try { st.settings = await api('/settings', { method:'PUT', body: JSON.stringify(payload) }); toast(t('applied')); st.configs = {}; renderUsersList(); }
   catch (e) { toast(e.message, true); }
+};
+
+let lastCleanIps = [];
+document.getElementById('scanIpBtn').onclick = async () => {
+  const ips = document.getElementById('cip-scan-input').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (ips.length === 0) return;
+  const btn = document.getElementById('scanIpBtn');
+  const resultsEl = document.getElementById('ipScanResults');
+  const toolbar = document.getElementById('ipScanToolbar');
+  btn.disabled = true;
+  const prevText = btn.textContent;
+  btn.textContent = t('scanning');
+  resultsEl.innerHTML = '';
+  toolbar.style.display = 'none';
+  try {
+    const data = await api('/settings/scan-ips', { method:'POST', body: JSON.stringify({ ips }) });
+    const results = data.results || [];
+    lastCleanIps = results.filter(r=>r.clean).map(r=>r.ip);
+    if (results.length === 0) {
+      resultsEl.innerHTML = `<div class="empty-state">${t('noCleanIpsFound')}</div>`;
+    } else {
+      resultsEl.innerHTML = results.map(r=>{
+        if (!r.clean) {
+          return `<div class="ipscan-row"><span class="ip">${escapeHtml(r.ip)}</span><span class="dead">${t('deadIp')}</span></div>`;
+        }
+        const cls = r.ping<150?'fast':(r.ping<400?'mid':'slow');
+        return `<div class="ipscan-row">
+          <span class="ip">${escapeHtml(r.ip)}</span>
+          <span class="meta">
+            <span class="ping ${cls}">${r.ping} ms</span>
+            <button class="icon-btn" onclick="copySingleIp('${r.ip}')" title="${t('copy')}">📋</button>
+          </span>
+        </div>`;
+      }).join('');
+      toolbar.style.display = lastCleanIps.length ? 'flex' : 'none';
+      document.getElementById('ipScanCount').textContent = `${lastCleanIps.length} / ${results.length}`;
+    }
+    toast(t('ipScanDone'));
+  } catch (e) { toast(e.message, true); }
+  finally { btn.disabled = false; btn.textContent = prevText; }
+};
+function copySingleIp(ip){
+  navigator.clipboard.writeText(ip).then(()=>toast(t('copied'))).catch(()=>{});
+}
+document.getElementById('copyAllIpBtn').onclick = () => {
+  if (lastCleanIps.length === 0) return;
+  navigator.clipboard.writeText(lastCleanIps.join('\n')).then(()=>toast(t('copied'))).catch(()=>{});
 };
 
 document.getElementById('applyCleanIpBtn').onclick = async () => {
@@ -175,19 +253,34 @@ function renderHome(){
 
   const wrap = document.getElementById('homeTableWrap');
   if(st.users.length === 0){
-    wrap.innerHTML = `<div class="empty-state"><div class="glyph">◌</div>${t('emptyUsers')}</div>`;
+    wrap.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="glyph">◌</div>${t('emptyUsers')}</div></td></tr>`;
     return;
   }
   wrap.innerHTML = st.users.map(u=>{
     const status = getStatus(u);
     const pct = u.trafficLimit>0 ? Math.min(100, Math.round((u.trafficUsed/u.trafficLimit)*100)) : 0;
-    return `<div class="home-user-row">
-      <div class="home-user-row-top">
-        <div style="font-weight:600; font-size:13px;">${escapeHtml(u.name)}</div>
-        <span class="badge ${status}">${statusLabel(status)}</span>
-      </div>
-      <div class="home-traffic-bar"><div class="fill" style="width:${pct}%"></div></div>
-    </div>`;
+    const dl = daysLeft(u.expiry);
+    const creditText = u.expiry ? (dl!==null ? (dl>=0? dl+' '+t('days') : t('passed')) : escapeHtml(u.expiry)) : t('unlimited');
+    const usedText = (Number(u.trafficUsed)||0).toFixed(2);
+    const totalText = u.trafficLimit>0 ? u.trafficLimit.toFixed(2) : '∞';
+    return `<tr>
+      <td class="name-cell">${escapeHtml(u.name)}</td>
+      <td><span class="proto-chip">${(u.protocol||'vless').toUpperCase()}</span></td>
+      <td class="usage-cell">
+        <div class="mini-bar"><div class="fill" style="width:${pct}%"></div></div>
+        <div class="usage-txt">${usedText} / ${totalText} GB</div>
+      </td>
+      <td>${creditText}</td>
+      <td><span class="badge ${status}">${statusLabel(status)}</span></td>
+      <td><button class="icon-btn" title="${t('subBtn')}" onclick="copySub('${u.uuid}')">🔗</button></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="toggleStatus(${u.id})" title="${t('edit')}">${u.status==='disabled'?'▶':'⏸'}</button>
+          <button class="icon-btn" onclick="openEditUserModal(${u.id})" title="${t('edit')}">✎</button>
+          <button class="icon-btn" onclick="deleteUser(${u.id})" title="${t('delete')}">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
   }).join('');
 }
 
@@ -302,7 +395,8 @@ document.getElementById('createUserBtn').onclick = async () => {
     protocol,
     network: network || '',
     port: document.getElementById('nu-port').value.trim(),
-    sni: document.getElementById('nu-sni').value.trim()
+    sni: document.getElementById('nu-sni').value.trim(),
+    status: document.getElementById('nu-status').value
   };
   try {
     await api('/users', { method:'POST', body: JSON.stringify(payload) });
@@ -323,6 +417,7 @@ function resetCreateForm(){
   document.getElementById('nu-protocol-net').value = 'vless|ws';
   document.getElementById('nu-port').value = '';
   document.getElementById('nu-sni').value = '';
+  document.getElementById('nu-status').value = 'active';
 }
 document.getElementById('cancelCreateBtn').onclick = resetCreateForm;
 
@@ -352,7 +447,7 @@ function openEditUserModal(id){
             <div class="field"><label>${t('fieldVolume')}</label><input id="eu-limit" type="number" min="0" value="${user.trafficLimit||0}"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>${t('fieldDeviceLimit')}</label><input id="eu-device-limit" type="number" min="0" value="${user.deviceLimit!=null?user.deviceLimit:1}"></div>
+            <div class="field"><label>${t('fieldConcurrent')}</label><input id="eu-device-limit" type="number" min="0" value="${user.deviceLimit!=null?user.deviceLimit:1}"></div>
             <div class="field"><label>${t('fieldFingerprint')}</label>
               <select id="eu-fingerprint">
                 <option value="chrome" ${user.fingerprint==='chrome'?'selected':''}>Chrome</option>
@@ -366,6 +461,18 @@ function openEditUserModal(id){
             </div>
           </div>
           <div class="field"><label>${t('configVolume')} (used)</label><input id="eu-used" type="number" min="0" value="${user.trafficUsed||0}"></div>
+          <div class="field-row">
+            <div class="field"><label>${t('fieldPath')}</label><input id="eu-path" disabled value="${escapeHtml(st.settings.path||'/ws')}"></div>
+            <div class="field"><label>${t('fieldStatusSelect')}</label>
+              <select id="eu-status">
+                <option value="active" ${user.status!=='disabled'?'selected':''}>${t('statusActive')}</option>
+                <option value="disabled" ${user.status==='disabled'?'selected':''}>${t('statusDisabled')}</option>
+              </select>
+            </div>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); cursor:pointer;">
+            <input type="checkbox" id="eu-reset-usage" style="width:auto;"> ${t('resetUsageLabel')}
+          </label>
         </div>
         <div class="modal-foot">
           <button class="btn secondary" id="cancelModal">${t('cancel')}</button>
@@ -384,9 +491,10 @@ function openEditUserModal(id){
       sni: document.getElementById('eu-sni').value.trim(),
       expiry: document.getElementById('eu-expiry').value,
       trafficLimit: parseFloat(document.getElementById('eu-limit').value) || 0,
-      trafficUsed: parseFloat(document.getElementById('eu-used').value) || 0,
+      trafficUsed: document.getElementById('eu-reset-usage').checked ? 0 : (parseFloat(document.getElementById('eu-used').value) || 0),
       deviceLimit: parseInt(document.getElementById('eu-device-limit').value, 10) || 0,
-      fingerprint: document.getElementById('eu-fingerprint').value
+      fingerprint: document.getElementById('eu-fingerprint').value,
+      status: document.getElementById('eu-status').value
     };
     try {
       await api(`/users/${user.id}`, { method:'PUT', body: JSON.stringify(payload) });
@@ -413,5 +521,12 @@ async function deleteUser(id){
 (function init(){
   const savedLang = localStorage.getItem('panel_lang') || 'fa';
   applyLang(savedLang);
+  document.getElementById('homeVersionBadge').textContent = APP_VERSION;
+  document.getElementById('settingsVersionVal').textContent = APP_VERSION;
+  const savedTheme = localStorage.getItem('panel_theme') || 'dark';
+  applyTheme(savedTheme);
+  const savedOpacity = localStorage.getItem('panel_bg_opacity');
+  document.getElementById('bgOpacityRange').value = savedOpacity != null ? savedOpacity : 18;
+  applyBgOpacity(document.getElementById('bgOpacityRange').value);
   if (st.token) showApp(); else showLogin();
 })();

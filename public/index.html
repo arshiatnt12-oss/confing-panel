@@ -13,7 +13,10 @@
 <!-- Login screen -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <img class="login-logo" src="/logo-icon.png" alt="Warbius">
+    <div class="login-brand">
+      <img src="/logo-icon.png" alt="Warbius">
+      <span class="brand-name">Warbius</span>
+    </div>
     <a class="login-telegram" href="https://t.me/WARBIUSvpn" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 3.5 2.6 11c-.9.35-.9 1.65.02 1.98l4.6 1.6 1.8 5.6c.24.75 1.2.9 1.68.28l2.4-3.1 4.9 3.6c.7.5 1.7.13 1.9-.72l3.3-14.6c.2-1-.8-1.8-1.7-1.15Z"/></svg>
       <span>WARBIUS VPN</span>
@@ -47,6 +50,7 @@
     <div class="nav-item" data-view="cleanip"><span class="nav-icon">◔</span><span data-i18n="navCleanip">Clean IP</span></div>
     <div class="nav-item" data-view="server"><span class="nav-icon">⚙</span><span data-i18n="navServer">تنظیمات سرور</span></div>
     <div class="nav-item" data-view="reality"><span class="nav-icon">⚡</span><span data-i18n="navReality">Reality</span></div>
+    <div class="nav-item" data-view="settings"><span class="nav-icon">🛠</span><span data-i18n="navSettings">تنظیمات پنل</span></div>
     <div class="nav-item" data-view="account"><span class="nav-icon">◈</span><span data-i18n="navAccount">حساب کاربری</span></div>
     <div class="sidebar-foot">
       <button class="btn secondary small" id="logoutBtn" style="width:100%;" data-i18n="logout">خروج</button>
@@ -59,8 +63,11 @@
     <div id="view-home">
       <div class="warbius-banner">
         <img class="banner-logo" src="/logo-banner.jpg" alt="">
-        <div class="word">WARBIUS</div>
-        <div class="sub" data-i18n="homeSubtitle">نمای کلی مصرف و وضعیت کاربران</div>
+        <div class="banner-text">
+          <div class="word" data-i18n="panelWelcome">خوش اومدی به Warbius Panel 👋</div>
+          <div class="sub" data-i18n="homeSubtitle">نمای کلی مصرف و وضعیت کاربران</div>
+        </div>
+        <div class="version-badge" id="homeVersionBadge">Warbius Panel v1.0</div>
       </div>
       <div class="stats">
         <div class="stat-card"><div class="label" data-i18n="statTotalUsers">کل کاربران</div><div class="value" id="statTotal">0</div></div>
@@ -69,8 +76,23 @@
         <div class="stat-card"><div class="label" data-i18n="statExpiring">نزدیک به انقضا</div><div class="value warn" id="statSoon">0</div></div>
       </div>
       <div class="panel-box">
-        <div class="box-head"><h3 data-i18n="listTitle">کاربران ساخته‌شده</h3></div>
-        <div id="homeTableWrap" style="padding:16px;"></div>
+        <div class="box-head"><h3 data-i18n="recentUsersTitle">کاربران اخیر</h3></div>
+        <div class="recent-table-wrap" style="padding:6px 16px 16px;">
+          <table class="recent-table">
+            <thead>
+              <tr>
+                <th data-i18n="tableName">نام</th>
+                <th data-i18n="tableProtocol">پروتکل</th>
+                <th data-i18n="tableUsage">مصرف</th>
+                <th data-i18n="tableCredit">اعتبار</th>
+                <th data-i18n="tableStatus">وضعیت</th>
+                <th data-i18n="tableSub">ساب</th>
+                <th data-i18n="tableActions">عملیات</th>
+              </tr>
+            </thead>
+            <tbody id="homeTableWrap"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -95,7 +117,7 @@
             <div class="field"><label data-i18n="fieldExpiryDays">انقضا (روز)</label><input id="nu-expiry-days" type="number" min="0" value="30"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label data-i18n="fieldDeviceLimit">محدودیت دستگاه</label><input id="nu-device-limit" type="number" min="0" value="1">
+            <div class="field"><label data-i18n="fieldConcurrent">اتصال هم‌زمان</label><input id="nu-device-limit" type="number" min="0" value="1">
               <div class="hint" data-i18n="unlimitedHint">۰ = نامحدود</div>
             </div>
             <div class="field"><label data-i18n="fieldFingerprint">فینگرپرینت</label>
@@ -127,6 +149,14 @@
             </div>
             <div class="field"><label data-i18n="fieldSni">SNI</label><input id="nu-sni" placeholder="مثلاً: speed.cloudflare.com"></div>
           </div>
+          <div class="field-row">
+            <div class="field"><label data-i18n="fieldPath">مسیر (Path)</label><input id="nu-path" disabled>
+              <div class="hint" data-i18n="remarkLockedHint">این مقدار ثابته و قابل تغییر نیست.</div>
+            </div>
+            <div class="field"><label data-i18n="fieldStatusSelect">وضعیت</label>
+              <select id="nu-status"><option value="active" data-i18n="statusActive">فعال</option><option value="disabled" data-i18n="statusDisabled">غیرفعال</option></select>
+            </div>
+          </div>
           <div class="create-actions">
             <button class="btn secondary" id="cancelCreateBtn" data-i18n="cancel">انصراف</button>
             <button class="btn gradient" id="createUserBtn"><span data-i18n="createBtn">ساخت کانفیگ</span> <span>✓</span></button>
@@ -154,6 +184,24 @@
           <div style="display:flex; justify-content:flex-end;">
             <button class="btn" id="applyCleanIpBtn" data-i18n="apply">اعمال</button>
           </div>
+        </div>
+      </div>
+
+      <div class="panel-box" style="margin-top:20px;">
+        <div class="box-head"><h3 data-i18n="ipScannerTitle">اسکنر آی‌پی</h3></div>
+        <div class="modal-body">
+          <div class="field">
+            <label data-i18n="ipScannerHint">آی‌پی‌ها رو (هر خط یکی) وارد کن تا آی‌پی‌های تمیز پیدا بشن.</label>
+            <textarea id="cip-scan-input" data-i18n-placeholder="ipScanPlaceholder" placeholder="1.1.1.1&#10;8.8.8.8"></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn secondary" id="scanIpBtn" data-i18n="scanBtn">اسکن کن</button>
+          </div>
+          <div class="ipscan-toolbar" id="ipScanToolbar" style="display:none;">
+            <span class="count" id="ipScanCount"></span>
+            <button class="btn small secondary" id="copyAllIpBtn" data-i18n="copyAll">کپی همه</button>
+          </div>
+          <div class="ipscan-results" id="ipScanResults"></div>
         </div>
       </div>
     </div>
@@ -228,6 +276,40 @@
           <div class="field"><label data-i18n="currentPassword">رمز فعلی</label><input id="acc-current" type="password"></div>
           <div class="field"><label data-i18n="newPassword">رمز جدید</label><input id="acc-new" type="password"></div>
           <div style="display:flex; justify-content:flex-end;"><button class="btn" id="changePassBtn" data-i18n="changePassword">تغییر رمز</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL SETTINGS -->
+    <div id="view-settings" style="display:none;">
+      <div class="topbar"><div><h1 data-i18n="settingsTitle">تنظیمات پنل</h1><p data-i18n="settingsSubtitle">ظاهر، رمز عبور و اطلاعات پنل</p></div></div>
+      <div class="panel-box">
+        <div class="modal-body">
+          <div class="field">
+            <label data-i18n="displayModeLabel">حالت نمایش</label>
+            <div class="theme-toggle-row">
+              <button type="button" class="theme-opt" id="themeLightBtn"><span data-i18n="lightMode">روشن</span> ☀</button>
+              <button type="button" class="theme-opt" id="themeDarkBtn"><span data-i18n="darkMode">تاریک</span> ☾</button>
+            </div>
+          </div>
+          <div class="field">
+            <label data-i18n="bgOpacityLabel">شفافیت پس‌زمینه</label>
+            <div class="opacity-row">
+              <input type="range" id="bgOpacityRange" min="0" max="100" value="18">
+              <span class="val" id="bgOpacityVal">18%</span>
+            </div>
+          </div>
+          <hr class="settings-sep">
+          <div class="settings-section-title" data-i18n="accountTitle">حساب کاربری</div>
+          <div class="field"><label data-i18n="currentPassword">رمز فعلی</label><input id="set-acc-current" type="password"></div>
+          <div class="field"><label data-i18n="newPassword">رمز جدید</label><input id="set-acc-new" type="password"></div>
+          <div style="display:flex; justify-content:flex-end;"><button class="btn" id="setChangePassBtn" data-i18n="changePassword">تغییر رمز</button></div>
+          <hr class="settings-sep">
+          <div class="settings-info-list">
+            <div class="settings-info-row"><span class="k" data-i18n="backgroundPathLabel">پس‌زمینه</span><span class="v">static/bg.jpg</span></div>
+            <div class="settings-info-row"><span class="k" data-i18n="versionLabel">نسخه</span><span class="v" id="settingsVersionVal">Warbius Panel v1.0</span></div>
+            <div class="settings-info-row"><span class="k" data-i18n="protocolsLabel">پروتکل‌ها</span><span class="v">VLESS · VMess · Shadowsocks · Reality</span></div>
+          </div>
         </div>
       </div>
     </div>

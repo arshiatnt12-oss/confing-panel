@@ -60,7 +60,7 @@ router.get('/', (req, res) => {
 
 // POST /api/users
 router.post('/', (req, res) => {
-  const { name, expiry, expiryDays, trafficLimit, protocol, network, port, sni, deviceLimit, fingerprint } = req.body || {};
+  const { name, expiry, expiryDays, trafficLimit, protocol, network, port, sni, deviceLimit, fingerprint, status } = req.body || {};
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'نام کاربر الزامی است' });
   }
@@ -70,10 +70,11 @@ router.post('/', (req, res) => {
   const finalFingerprint = FINGERPRINTS.includes(fingerprint) ? fingerprint : 'chrome';
   const finalExpiry = expiry !== undefined && expiry !== '' ? expiry : expiryFromDays(expiryDays);
   const finalDeviceLimit = deviceLimit === undefined || deviceLimit === '' ? 1 : Math.max(0, parseInt(deviceLimit, 10) || 0);
+  const finalStatus = status === 'disabled' ? 'disabled' : 'active';
 
   const stmt = db.prepare(`
     INSERT INTO users (name, uuid, protocol, network, port, sni, ss_method, expiry, traffic_limit_gb, traffic_used_gb, device_limit, fingerprint, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'aes-256-gcm', ?, ?, 0, ?, ?, 'active')
+    VALUES (?, ?, ?, ?, ?, ?, 'aes-256-gcm', ?, ?, 0, ?, ?, ?)
   `);
   try {
     const info = stmt.run(
@@ -86,7 +87,8 @@ router.post('/', (req, res) => {
       finalExpiry,
       Number(trafficLimit) || 0,
       finalDeviceLimit,
-      finalFingerprint
+      finalFingerprint,
+      finalStatus
     );
     const row = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     xrayManager.scheduleRestart();
